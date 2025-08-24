@@ -19,9 +19,7 @@ const transporter = nodemailer.createTransport({
 
 transporter.verify((error) => {
   if (error) {
-    
   } else {
-    
   }
 });
 
@@ -141,14 +139,12 @@ export const register = async (req, res) => {
     };
 
     transporter.sendMail(mailOptions).catch((emailError) => {
-      
     });
 
     res.status(201).json({
       msg: "OTP sent to your email. Please verify to complete registration.",
     });
   } catch (err) {
-    
     res.status(500).json({ msg: "Server error during registration." });
   }
 };
@@ -166,7 +162,7 @@ export const forgotPassword = async (req, res) => {
     user.resetPasswordTokenExpiry = Date.now() + 3600000;
     await user.save();
 
-    const frontendBase = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendBase = process.env.FRONTEND_URL || "https://fyp-backend-yxwi.onrender.com";
     const resetUrl = `${frontendBase}/reset-password/${resetToken}`;
 
     const mailOptions = {
@@ -190,7 +186,6 @@ export const forgotPassword = async (req, res) => {
       msg: "Password reset link sent to your email.",
     });
   } catch (error) {
-    
     res.status(500).json({
       msg: "Error sending email. Please try again.",
     });
@@ -218,7 +213,6 @@ export const resetPassword = async (req, res) => {
 
     res.status(200).json({ msg: "Password reset successfully." });
   } catch (error) {
-    
     res.status(500).json({ msg: "Server error during password reset." });
   }
 };
@@ -264,7 +258,6 @@ export const verifyOtp = async (req, res) => {
 
     res.status(200).json({ msg: "Email verified successfully. Please login." });
   } catch (error) {
-    
     res.status(500).json({ msg: "Server error during OTP verification." });
   }
 };
@@ -296,7 +289,6 @@ export const resendOtp = async (req, res) => {
 
     res.status(200).json({ msg: "A new OTP has been sent to your email." });
   } catch (error) {
-    
     res.status(500).json({ msg: "Server error while resending OTP." });
   }
 };
@@ -306,7 +298,6 @@ export const getAllUsers = async (req, res) => {
     const users = await User.find({}, { password: 0, emailVerificationOTP: 0, emailVerificationOTPExpiry: 0, resetPasswordToken: 0, resetPasswordTokenExpiry: 0 });
     res.status(200).json(users);
   } catch (error) {
-    
     res.status(500).json({ msg: "Server error while fetching users." });
   }
 };
@@ -320,7 +311,6 @@ export const deleteUser = async (req, res) => {
     }
     res.status(200).json({ msg: "User deleted successfully" });
   } catch (error) {
-    
     res.status(500).json({ msg: "Server error while deleting user." });
   }
 };
