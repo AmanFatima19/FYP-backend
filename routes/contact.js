@@ -1,8 +1,10 @@
-const express = require("express")
-const{createContact,getContacts} = require("../controllers/contact")
-const router = express.Router()
+import express from "express";
+import { createContact, getContacts } from "../controllers/contact.js";
+import auth from "../middleware/auth.js";
 
-router.post("/",createContact)
-router.get("/",getContacts)
+const router = express.Router();
 
-module.exports = router
+router.post("/", auth, createContact);
+router.get("/", getContacts);
+
+export default router;

@@ -1,17 +1,27 @@
-const express = require("express");
-const {
+import express from "express";
+import auth from "../middleware/auth.js";
+import {
   register,
-  login, // Ye ab client login ke liye hai
-  adminLogin, // Naya admin login function
+  login,
+  adminLogin,
   forgotPassword,
   resetPassword,
-} = require("../controllers/userController");
+  verifyOtp,
+  resendOtp,
+  getAllUsers,
+  deleteUser,
+} from "../controllers/userController.js";
+
 const router = express.Router();
 
 router.post("/register", register);
-router.post("/login", login); // Ab ismein sirf client login hoga
-router.post("/admin-login", adminLogin); // Naya admin-specific login route
+router.post("/login", login);
+router.post("/admin-login", adminLogin);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:resetPasswordToken", resetPassword);
+router.post("/verify-otp", verifyOtp);
+router.post("/resend-otp", resendOtp);
+router.get("/", getAllUsers);
+router.delete("/:id", auth, deleteUser);
 
-module.exports = router;
+export default router;

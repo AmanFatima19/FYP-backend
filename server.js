@@ -10,6 +10,9 @@ import contactRouter from "./routes/contact.js";
 import tripRouter from "./routes/trip.js";
 import feedbackRouter from "./routes/feedback.js";
 import orderRouter from "./routes/orderRouter.js";
+import newSendRouter from "./routes/sendOrder.js";
+import paymentRouter from "./routes/payment.js";
+
 dotenv.config();
 
 const app = express();
@@ -18,15 +21,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
 app.use(express.json());
 app.use(cors());
+
 app.use("/", userRouter);
 app.use("/contact", contactRouter);
 app.use("/feedback", feedbackRouter);
 app.use("/trip", tripRouter);
 app.use("/orders", orderRouter);
-
+app.use("/send-order", newSendRouter);
+app.use("/payments", paymentRouter);
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -35,28 +39,25 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-transporter.verify((error, success) => {
+transporter.verify((error) => {
   if (error) {
-    console.error("Nodemailer connection failed:", error);
+    
   } else {
-    console.log("Nodemailer connected now");
+    
   }
 });
 
 const connect = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("MongoDb database connected");
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("Database connected successfully");
   } catch (err) {
-    console.log("MongoDb database connection failed");
-    console.log(err);
+    console.error("Database connection error:", err.message);
   }
 };
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT || 8000, () => {
+  const port = process.env.PORT || 8000;
+  console.log(`Server is up and listening on port ${port}`);
   connect();
-  console.log(`Server is running on port ${process.env.PORT}`);
 });

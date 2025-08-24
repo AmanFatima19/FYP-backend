@@ -1,6 +1,14 @@
 import express from "express";
 import multer from "multer";
-import { createOrder, getOrders } from "../controllers/ordercontroller.js";
+import {
+  createOrder,
+  getOrders,
+  getUserOrders,
+  getOrderById,
+  updateOrder,
+  deleteOrder,
+} from "../controllers/ordercontroller.js";
+import auth from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -10,7 +18,11 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-router.post("/", upload.array("images", 5), createOrder);
+router.post("/", auth, upload.array("images", 5), createOrder);
 router.get("/", getOrders);
+router.get("/user-orders", auth, getUserOrders);
+router.get("/:id", getOrderById);
+router.patch("/:id", auth, upload.array("images", 5), updateOrder);
+router.delete("/:id", auth, deleteOrder);
 
 export default router;
