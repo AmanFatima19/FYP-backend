@@ -8,14 +8,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
 export const createPayment = async (req, res) => {
   try {
     const { orderType, orderId, method, transactionId, amount } = req.body;
@@ -44,12 +36,12 @@ export const createPayment = async (req, res) => {
       });
     }
 
-    if (!["easypaisa", "bank", "jazzcash"].includes(method)) {
+    if (!["easypaisa", "bank", "jazzcash", "paypal", "google"].includes(method)) {
       return res.status(400).json({ 
         success: false,
         message: "Invalid payment method",
         errors: {
-          method: "Payment method must be one of: easypaisa, bank, jazzcash"
+          method: "Payment method must be one of: easypaisa, bank, jazzcash, paypal, google"
         }
       });
     }
@@ -143,15 +135,28 @@ export const getAllPayments = async (req, res) => {
     const payments = await Payment.find()
       .populate({
         path: 'orderId',
-        select: 'price status',
+        select: 'price status userId',
         options: { strictPopulate: false }
       })
       .sort({ createdAt: -1 });
 
+    // Add user information to each payment
+    const paymentsWithUserInfo = await Promise.all(payments.map(async (payment) => {
+      let user = null;
+      if (payment.orderId && payment.orderId.userId) {
+        user = await User.findById(payment.orderId.userId).select('name email');
+      }
+      
+      return {
+        ...payment.toObject(),
+        user: user ? { _id: user._id, name: user.name, email: user.email } : null
+      };
+    }));
+
     res.status(200).json({
       success: true,
-      count: payments.length,
-      payments
+      count: paymentsWithUserInfo.length,
+      payments: paymentsWithUserInfo
     });
   } catch (error) {
     res.status(500).json({ 
@@ -164,6 +169,15 @@ export const getAllPayments = async (req, res) => {
 
 const sendPaymentNotificationEmail = async (payment, status) => {
   try {
+    // Create transporter inside the function to ensure environment variables are loaded
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
     let order;
     let user;
     
@@ -233,7 +247,19 @@ const sendPaymentNotificationEmail = async (payment, status) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
+    console.log("Payment notification email sent successfully:", {
+      paymentId: payment._id,
+      status: status,
+      email: user.email,
+      messageId: result.messageId
+    });
   } catch (emailError) {
+    console.error("Error sending payment notification email:", emailError.message);
+    console.error("Email error details:", {
+      paymentId: payment._id,
+      status: status,
+      error: emailError.response || emailError.message
+    });
   }
 };
 
@@ -263,12 +289,13 @@ export const updatePaymentStatus = async (req, res) => {
     }
 
     if (status === "completed") {
+        // Delete the specific order associated with the payment
         if (payment.orderType === "sendOrder") {
             await SendOrder.findByIdAndDelete(payment.orderId);
         } else if (payment.orderType === "order") {
             await Order.findByIdAndDelete(payment.orderId);
         } else if (payment.orderType === "trip") {
-            await TripModel.findByIdAndDelete(payment.orderId);
+            // Do not delete trips; keep them in the database
         }
     }
     if (status === "completed" || status === "failed") {

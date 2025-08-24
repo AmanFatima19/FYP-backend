@@ -14,7 +14,7 @@ const paymentSchema = new mongoose.Schema(
     },
     method: {
       type: String,
-      enum: ["easypaisa", "bank", "jazzcash"],
+      enum: ["easypaisa", "bank", "jazzcash", "paypal", "google"],
       required: true,
     },
     transactionId: {

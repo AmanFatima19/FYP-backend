@@ -62,6 +62,7 @@ const TripSchema = new mongoose.Schema(
       type: Boolean,
       required: true,
     },
+    // Removed status field as per user request
   },
   { timestamps: true }
 );

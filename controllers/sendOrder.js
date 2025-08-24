@@ -1,5 +1,6 @@
 import SendOrder from "../models/sendOrder.js";
 import User from "../models/userModel.js";
+import Payment from "../models/payment.js";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
@@ -77,8 +78,8 @@ Travelers going to your destination city will contact you, or you can also reach
                   <p><strong>From:</strong> ${from}</p>
                   <p><strong>To:</strong> ${to}</p>
                   <p><strong>Weight:</strong> ${weight} kg</p>
-                  <p><strong>Earliest Delivery:</strong> ${new Date(earliestDate).toLocaleDateString()}</p>
-                  <p><strong>Last Delivery:</strong> ${new Date(lastDate).toLocaleDateString()}</p>
+                  <p><strong>Earliest Date:</strong> ${new Date(earliestDate).toLocaleDateString()}</p>
+                  <p><strong>Last Date:</strong> ${new Date(lastDate).toLocaleDateString()}</p>
                   ${description ? `<p><strong>Description:</strong> ${description}</p>` : ''}
                 </div>
 
@@ -124,8 +125,23 @@ Travelers going to your destination city will contact you, or you can also reach
 
 export const getSendOrders = async (req, res) => {
   try {
-    const orders = await SendOrder.find({ userId: req.user.id }).sort({ createdAt: -1 });
-    res.json(orders);
+    const orders = await SendOrder.find({ userId: req.user.id, status: { $ne: "completed" } }).sort({ createdAt: -1 });
+    
+    // Get all completed payments for send orders
+    const paidSendOrders = await Payment.find({ 
+      orderType: "sendOrder", 
+      status: "completed" 
+    }).select('orderId');
+    
+    // Extract send order IDs that have been paid for
+    const paidSendOrderIds = paidSendOrders.map(payment => payment.orderId.toString());
+    
+    // Filter out send orders that have been paid for
+    const availableSendOrders = orders.filter(order => 
+      !paidSendOrderIds.includes(order._id.toString())
+    );
+    
+    res.json(availableSendOrders);
   } catch (err) {
     res.status(500).json({ message: "Error fetching orders", error: err.message });
   }
@@ -134,7 +150,22 @@ export const getSendOrders = async (req, res) => {
 export const getUserSendOrders = async (req, res) => {
   try {
     const orders = await SendOrder.find({ userId: req.user.id }).sort({ createdAt: -1 });
-    res.json(orders);
+    
+    // Get all completed payments for send orders
+    const paidSendOrders = await Payment.find({ 
+      orderType: "sendOrder", 
+      status: "completed" 
+    }).select('orderId');
+    
+    // Extract send order IDs that have been paid for
+    const paidSendOrderIds = paidSendOrders.map(payment => payment.orderId.toString());
+    
+    // Filter out send orders that have been paid for
+    const availableSendOrders = orders.filter(order => 
+      !paidSendOrderIds.includes(order._id.toString())
+    );
+    
+    res.json(availableSendOrders);
   } catch (err) {
     res.status(500).json({ message: "Error fetching user orders", error: err.message });
   }
@@ -143,7 +174,22 @@ export const getUserSendOrders = async (req, res) => {
 export const getAllSendOrders = async (req, res) => {
   try {
     const orders = await SendOrder.find().sort({ createdAt: -1 });
-    res.json(orders);
+    
+    // Get all completed payments for send orders
+    const paidSendOrders = await Payment.find({ 
+      orderType: "sendOrder", 
+      status: "completed" 
+    }).select('orderId');
+    
+    // Extract send order IDs that have been paid for
+    const paidSendOrderIds = paidSendOrders.map(payment => payment.orderId.toString());
+    
+    // Filter out send orders that have been paid for
+    const availableSendOrders = orders.filter(order => 
+      !paidSendOrderIds.includes(order._id.toString())
+    );
+    
+    res.json(availableSendOrders);
   } catch (err) {
     res.status(500).json({ message: "Error fetching all orders", error: err.message });
   }

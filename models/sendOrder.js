@@ -73,7 +73,12 @@ termsAccepted: {
   type: Boolean,
   required: [true, "Please agree to the Terms & Conditions"]
 },
-  images: [String]
+  images: [String],
+  status: {
+    type: String,
+    enum: ["pending", "in-progress", "completed"],
+    default: "pending"
+  }
 }, 
 { timestamps: true });
 
